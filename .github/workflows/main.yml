@@ -1,0 +1,18 @@
+name: bot-test
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      TZ: utc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.11'
+      - run: npm install
+      - run: npm run build
+      - run: npm run start:prod
