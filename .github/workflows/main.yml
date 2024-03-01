@@ -4,6 +4,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      ENVIRONMENT: producttion
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
