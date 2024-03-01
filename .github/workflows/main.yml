@@ -11,7 +11,6 @@ jobs:
       - name: create env file
         run: | 
           touch .env
-          echo ${{ secrets.TELEGRAM_BOT_TOKEN }}
           echo TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} >> .env
           echo WEATHER_API_KEY=${{ secrets.WEATHER_API_KEY }} >> .env
           echo GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }} >> .env
