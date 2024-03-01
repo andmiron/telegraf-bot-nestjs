@@ -20,5 +20,7 @@ jobs:
           echo WEATHER_API_KEY=${{ secrets.WEATHER_API_KEY }} >> .env
           echo GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }} >> .env
       - name: build
-        run: npm run build
-      - run: npm run start:prod
+        run: | 
+          npm install
+          npm run build
+          npm run start:prod
