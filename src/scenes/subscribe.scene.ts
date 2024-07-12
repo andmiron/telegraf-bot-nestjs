@@ -1,29 +1,41 @@
 import { Ctx, Hears, On, Scene, SceneEnter } from 'nestjs-telegraf';
-import { SceneContext } from 'telegraf/typings/scenes';
-import { BotResponse, ScenesId, TimeTrigger } from '../common/bot.constants';
+import {
+  BotResponse,
+  LogMessages,
+  ScenesId,
+  TimeTrigger,
+} from '../common/bot.constants';
 import { KeyboardButton, Message } from 'typegram';
 import { Markup } from 'telegraf';
-import { CustomSceneContext } from '../interfaces/custom.scene.context';
 import { DbService } from '../services/db.service';
 import { TimeConverter } from '../services/time.converter';
+import { CustomContext } from '../interfaces/custom.scene.context';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Scene(ScenesId.SUBSCRIBE_SCENE)
 export class SubscribeScene {
   constructor(
+    @InjectPinoLogger() private readonly logger: PinoLogger,
     private readonly userService: DbService,
-    private timeConverter: TimeConverter,
+    private readonly timeConverter: TimeConverter,
   ) {}
 
   @SceneEnter()
-  async start(@Ctx() ctx: SceneContext<CustomSceneContext>) {
-    const keyboardButtons: KeyboardButton[] = [];
+  async start(@Ctx() ctx: CustomContext) {
+    this.logger.info(
+      {
+        user: ctx.message.from.username,
+        scene: ScenesId.SUBSCRIBE_SCENE,
+      },
+      LogMessages.ENTER_SCENE,
+    );
 
+    const keyboardButtons: KeyboardButton[] = [];
     for (let hour = 0; hour < 24; hour++) {
       keyboardButtons.push(
         Markup.button.text(`${hour < 10 ? `0${hour}` : hour}:00`),
       );
     }
-
     const replyKeyboard = Markup.keyboard(keyboardButtons, { columns: 3 })
       .resize()
       .oneTime()
@@ -33,14 +45,11 @@ export class SubscribeScene {
   }
 
   @Hears(TimeTrigger)
-  async getTime(
-    @Ctx()
-    ctx: SceneContext<CustomSceneContext> & { message: Message.TextMessage },
-  ) {
-    ctx.session.__scenes.time = this.timeConverter.convertHoursStringToMinutes(
+  async getTime(@Ctx() ctx: CustomContext & { message: Message.TextMessage }) {
+    ctx.scene.session.time = this.timeConverter.convertHoursStringToMinutes(
       ctx.message.text,
     );
-    ctx.session.__scenes.timeInput = ctx.message.text;
+    ctx.scene.session.timeInput = ctx.message.text;
 
     await ctx.reply(
       BotResponse.SHARE_LOCATION,
@@ -55,16 +64,12 @@ export class SubscribeScene {
 
   @On('location')
   async subscribeRequest(
-    @Ctx()
-    ctx: SceneContext<CustomSceneContext> & {
-      message: Message.LocationMessage;
-    },
+    @Ctx() ctx: CustomContext & { message: Message.LocationMessage },
   ) {
     const { latitude, longitude } = ctx.message.location;
-    ctx.session.__scenes.latitude = latitude;
-    ctx.session.__scenes.longitude = longitude;
-
-    ctx.session.__scenes.offset =
+    ctx.scene.session.latitude = latitude;
+    ctx.scene.session.longitude = longitude;
+    ctx.scene.session.offset =
       await this.timeConverter.getUtcOffsetMinutesFromCoordinates(
         latitude,
         longitude,
@@ -84,13 +89,14 @@ export class SubscribeScene {
   @Hears(BotResponse.SUBSCRIBE_BUTTON)
   async subscribe(
     @Ctx()
-    ctx: SceneContext<CustomSceneContext> & { message: Message.TextMessage },
+    ctx: CustomContext & { message: Message.TextMessage },
   ) {
     try {
-      ctx.session.__scenes.chatId = ctx.chat.id;
+      ctx.scene.session.chatId = ctx.chat.id;
       const { time, offset, timeInput, longitude, latitude, chatId } =
-        ctx.session.__scenes;
-      await this.userService.createOrUpdateUser({
+        ctx.scene.session;
+
+      const user = await this.userService.createOrUpdateUser({
         time,
         offset,
         timeInput,
@@ -98,16 +104,40 @@ export class SubscribeScene {
         latitude,
         chatId,
       });
-      await ctx.reply(BotResponse.SUBSCRIBED + ctx.session.__scenes.timeInput);
+      this.logger.info({ user }, LogMessages.USER_SAVED);
+
+      await ctx.reply(BotResponse.SUBSCRIBED + ctx.scene.session.timeInput);
+      this.logger.info(
+        {
+          user: ctx.message.from.username,
+          scene: ScenesId.SUBSCRIBE_SCENE,
+        },
+        LogMessages.LEFT_SCENE,
+      );
       await ctx.scene.leave();
     } catch (err) {
+      this.logger.error(err.message);
       await ctx.reply(BotResponse.WEATHER_FETCH_ERROR);
+      this.logger.info(
+        {
+          user: ctx.message.from.username,
+          scene: ScenesId.SUBSCRIBE_SCENE,
+        },
+        LogMessages.LEFT_SCENE,
+      );
       await ctx.scene.leave();
     }
   }
 
   @Hears('/cancel')
-  async onCancel(@Ctx() ctx: SceneContext<CustomSceneContext>) {
+  async onCancel(@Ctx() ctx: CustomContext) {
+    this.logger.info(
+      {
+        user: ctx.message.from.username,
+        scene: ScenesId.SUBSCRIBE_SCENE,
+      },
+      LogMessages.LEFT_SCENE,
+    );
     await ctx.scene.leave();
     await ctx.reply(BotResponse.SCENE_EXIT);
   }

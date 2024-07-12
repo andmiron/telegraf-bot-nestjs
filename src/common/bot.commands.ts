@@ -1,5 +1,6 @@
 import { BotCommand } from 'typegram';
 import { BotCommandDescription, BotCommandName } from './bot.constants';
+import { createBotCommand } from '../utils/bot.command.creator';
 
 export const BotCommands: BotCommand[] = [
   createBotCommand(BotCommandName.START, BotCommandDescription.START),
@@ -12,10 +13,3 @@ export const BotCommands: BotCommand[] = [
   createBotCommand(BotCommandName.WEATHER, BotCommandDescription.WEATHER),
   createBotCommand(BotCommandName.UPDATE, BotCommandDescription.UPDATE),
 ];
-
-function createBotCommand(command: string, description: string): BotCommand {
-  return {
-    command,
-    description,
-  };
-}

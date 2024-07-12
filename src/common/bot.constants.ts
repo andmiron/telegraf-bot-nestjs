@@ -23,7 +23,7 @@ export enum BotResponse {
   SHARE_LOCATION = 'Share your location with button below 📲',
   SHARE_BUTTON = 'Send my location 📍',
   WEATHER_FETCH_ERROR = 'An error occurred.\nTry again later with /subscribe',
-  ALREADY_SUBSCRIBE = `You already have subscription.\nTo update data use /update`,
+  ALREADY_SUBSCRIBED = `You already have subscription.\nTo update data use /update`,
   UNSUBSCRIBE = 'Your subscription has been declined 🔕',
   TIME_INPUT = 'Enter desired time ⌛ in HH:MM format\nor use keyboard below ⬇️\n(or /cancel to exit)',
   SUBMIT_SUBSCRIPTION = `Good. Submit to subscribe ⬇️\n(or /cancel to exit)`,
@@ -49,6 +49,7 @@ export const WeatherGroup: Record<string, string> = {
   Snow: '❄️',
   Rain: '🌧',
   Drizzle: '🥶',
+  Mist: '☁️',
 };
 
 export interface WeatherDto {
@@ -68,3 +69,12 @@ export interface WeatherDto {
 export const TimeTrigger = /^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
 
 export const TimeZone = 'Etc/Universal';
+
+export enum LogMessages {
+  ENTER_SCENE = 'User entered the scene',
+  LEFT_SCENE = 'User left the scene',
+  USER_SAVED = 'User saved to db',
+  USER_DELETED = 'User deleted from db',
+  MESSAGE_SENT = 'User got a message',
+  CRON_RUN = 'Cron job has run',
+}

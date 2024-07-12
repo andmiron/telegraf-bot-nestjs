@@ -1,6 +1,6 @@
-import { SceneSessionData } from 'telegraf/typings/scenes';
+import { Scenes } from 'telegraf';
 
-export interface CustomSceneContext extends SceneSessionData {
+interface MySceneSession extends Scenes.SceneSessionData {
   time: number;
   offset: number;
   chatId: number;
@@ -8,3 +8,5 @@ export interface CustomSceneContext extends SceneSessionData {
   longitude: number;
   timeInput: string;
 }
+
+export type CustomContext = Scenes.SceneContext<MySceneSession>;
