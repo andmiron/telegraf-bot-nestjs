@@ -87,6 +87,7 @@ export class SubscribeScene {
     ctx: SceneContext<CustomSceneContext> & { message: Message.TextMessage },
   ) {
     try {
+      console.log(ctx.session);
       ctx.session.__scenes.chatId = ctx.chat.id;
       const { time, offset, timeInput, longitude, latitude, chatId } =
         ctx.session.__scenes;
